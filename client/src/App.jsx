@@ -1,7 +1,9 @@
+import { auth } from "./firebase/auth"
+
 function App() {
   return (
-    <h1 className="text-3xl font-bold text-green-600">
-      Smart Hospital System
+    <h1 className="text-xl text-green-600">
+      Firebase Connected ✅
     </h1>
   )
 }
