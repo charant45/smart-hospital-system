@@ -1,11 +1,7 @@
-import { auth } from "./firebase/auth"
+import Register from "./pages/auth/Register"
 
 function App() {
-  return (
-    <h1 className="text-xl text-green-600">
-      Firebase Connected ✅
-    </h1>
-  )
+  return <Register />
 }
 
 export default App
