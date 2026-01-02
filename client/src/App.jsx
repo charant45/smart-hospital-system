@@ -1,6 +1,8 @@
 import Login from "./pages/auth/Login"
 import { useAuth } from "./context/AuthContext"
 
+import AdminDashboard from "./pages/dashboards/AdminDashboard"
+
 function App() {
   const { user, role, loading } = useAuth()
 
@@ -12,15 +14,10 @@ function App() {
     return <Login />
   }
 
-  return (
-    <div className="text-center mt-10">
-      <h1 className="text-2xl font-bold text-green-600">
-        Logged in successfully ✅
-      </h1>
-      <p>User: {user.email}</p>
-      <p>Role: {role}</p>
-    </div>
-  )
+  // Role-based rendering
+  if (role === "admin") return <AdminDashboard />
+
+  return <h1>Unauthorized</h1>
 }
 
 export default App
