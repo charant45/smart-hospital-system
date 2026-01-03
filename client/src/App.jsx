@@ -1,6 +1,8 @@
 import Login from "./pages/auth/Login"
 import { useAuth } from "./context/AuthContext"
 
+import PatientDashboard from "./pages/dashboards/PatientDashboard"
+import DoctorDashboard from "./pages/dashboards/DoctorDashboard"
 import AdminDashboard from "./pages/dashboards/AdminDashboard"
 
 function App() {
@@ -15,6 +17,8 @@ function App() {
   }
 
   // Role-based rendering
+  if (role === "patient") return <PatientDashboard />
+  if (role === "doctor") return <DoctorDashboard />
   if (role === "admin") return <AdminDashboard />
 
   return <h1>Unauthorized</h1>
