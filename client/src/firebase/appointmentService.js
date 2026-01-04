@@ -5,6 +5,8 @@ import {
   where,
   getDocs,
   serverTimestamp,
+  orderBy,
+  onSnapshot,
 } from "firebase/firestore"
 import { db } from "./db"
 
@@ -40,5 +42,24 @@ export const bookAppointment = async ({
     queueNumber,
     status: "waiting",
     createdAt: serverTimestamp(),
+  })
+}
+
+// Realtime queue listener
+export const listenToQueue = (doctorId, date, callback) => {
+  const q = query(
+    collection(db, "appointments"),
+    where("doctorId", "==", doctorId),
+    where("date", "==", date),
+    where("status", "==", "waiting"),
+    orderBy("queueNumber")
+  )
+
+  return onSnapshot(q, (snapshot) => {
+    const queue = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+    callback(queue)
   })
 }
