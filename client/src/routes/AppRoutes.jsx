@@ -11,6 +11,10 @@ import AdminDashboard from "../pages/dashboards/AdminDashboard"
 
 // Features
 import DoctorQueue from "../pages/doctor/DoctorQueue"
+import LiveQueue from "../pages/patient/LiveQueue"
+import MyAppointments from "../pages/patient/MyAppointments"
+import Notifications from "../components/Notifications" 
+import BookAppointment from "../pages/patient/BookAppointment" 
 
 // Guards
 import ProtectedRoute from "./ProtectedRoute"
@@ -30,6 +34,39 @@ function AppRoutes() {
           <ProtectedRoute>
             <RoleRoute allowedRoles={["patient"]}>
               <PatientDashboard />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/patient/book-appointment"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["patient"]}>
+              <BookAppointment />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/patient/live-queue"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["patient"]}>
+              <LiveQueue />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/patient/my-appointments"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["patient"]}>
+              <MyAppointments />
             </RoleRoute>
           </ProtectedRoute>
         }

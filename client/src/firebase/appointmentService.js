@@ -3,6 +3,7 @@ import {
   addDoc,
   doc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   getDocs,
@@ -12,6 +13,7 @@ import {
   onSnapshot,
 } from "firebase/firestore"
 import { db } from "./db"
+import { createNotification } from "./notificationService"
 
 // Generate queue number
 const getNextQueueNumber = async (doctorId, date) => {
@@ -101,5 +103,48 @@ export const callNextPatient = async (doctorId, date) => {
     await updateDoc(doc(db, "appointments", nextPatient.id), {
       status: "in-progress",
     })
+
+    // 🔔 Notify patient
+    await createNotification({
+      userId: nextPatient.data().patientId,
+      appointmentId: nextPatient.id,
+      message: "Your turn! Please proceed to the doctor.",
+    })
   }
+}
+
+// Cancel appointment
+export const cancelAppointment = async (appointmentId) => {
+  await updateDoc(doc(db, "appointments", appointmentId), {
+    status: "cancelled",
+  })
+}
+
+// Reschedule appointment (change date)
+export const rescheduleAppointment = async (appointmentId, newDate) => {
+  await updateDoc(doc(db, "appointments", appointmentId), {
+    date: newDate,
+    status: "waiting",
+  })
+}
+
+// Permanently delete an appointment
+export const deleteAppointment = async (appointmentId) => {
+  await deleteDoc(doc(db, "appointments", appointmentId))
+}
+
+// Listen to patient appointments
+export const listenToPatientAppointments = (patientId, callback) => {
+  const q = query(
+    collection(db, "appointments"),
+    where("patientId", "==", patientId)
+  )
+
+  return onSnapshot(q, (snapshot) => {
+    const appointments = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+    callback(appointments)
+  })
 }

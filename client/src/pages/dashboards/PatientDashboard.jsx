@@ -1,5 +1,7 @@
 import BookAppointment from "../patient/BookAppointment"
 import LiveQueue from "../patient/LiveQueue"
+import MyAppointments from "../patient/MyAppointments"
+import Notifications from "../../components/Notifications"
 
 function PatientDashboard() {
   return (
@@ -8,8 +10,10 @@ function PatientDashboard() {
         Patient Dashboard
       </h1>
 
+      <Notifications />
       <BookAppointment />
       <LiveQueue />
+      <MyAppointments />
     </div>
   )
 }

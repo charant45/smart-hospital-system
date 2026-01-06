@@ -1,14 +1,27 @@
 import { useState } from "react"
 import { loginUser } from "../../firebase/authService"
+import { getUserRole } from "../../firebase/userService"
+import { useNavigate } from "react-router-dom"
 
 function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const navigate = useNavigate()
 
   const handleLogin = async () => {
     try {
-      await loginUser(email, password)
-      alert("Login successful")
+      // 1️⃣ Login user
+      const res = await loginUser(email, password)
+
+      // 2️⃣ Get role from Firestore
+      const userData = await getUserRole(res.user.uid)
+
+      // 3️⃣ Redirect based on role
+      if (userData.role === "patient") navigate("/patient")
+      else if (userData.role === "doctor") navigate("/doctor")
+      else if (userData.role === "admin") navigate("/admin")
+      else navigate("/unauthorized")
+
     } catch (err) {
       alert(err.message)
     }
