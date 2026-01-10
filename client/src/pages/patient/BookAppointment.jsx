@@ -1,95 +1,65 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { bookAppointment } from "../../firebase/appointmentService"
 import { useAuth } from "../../context/AuthContext"
+import { getDoctors } from "../../firebase/doctorService"
 
 function BookAppointment() {
   const { user } = useAuth()
-  const [doctorId, setDoctorId] = useState("")
-  const [doctorName, setDoctorName] = useState("")
+  const [doctors, setDoctors] = useState([])
+  const [selectedDoctor, setSelectedDoctor] = useState("")
   const [date, setDate] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState("")
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!user) return
+  useEffect(() => {
+    getDoctors().then(setDoctors)
+  }, [])
 
-    setLoading(true)
-    setMessage("")
-
-    try {
-      await bookAppointment({
-        patientId: user.uid,
-        patientEmail: user.email,
-        doctorId,
-        doctorName,
-        date,
-      })
-      setMessage("Appointment booked successfully!")
-      setDoctorId("")
-      setDoctorName("")
-      setDate("")
-    } catch (error) {
-      setMessage("Error booking appointment: " + error.message)
-    } finally {
-      setLoading(false)
+  const handleBook = async () => {
+    if (!selectedDoctor || !date) {
+      alert("All fields required")
+      return
     }
+
+    const doctor = doctors.find((d) => d.id === selectedDoctor)
+
+    await bookAppointment({
+      patientId: user.uid,
+      patientEmail: user.email,
+      doctorId: doctor.id,
+      doctorName: doctor.name,
+      date,
+    })
+
+    alert("Appointment booked successfully")
   }
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-bold text-green-600 mb-4">
+    <div className="max-w-md mx-auto p-6">
+      <h2 className="text-xl font-bold mb-4">Book Appointment</h2>
+
+      <select
+        className="border p-2 w-full mb-3"
+        onChange={(e) => setSelectedDoctor(e.target.value)}
+      >
+        <option value="">Select Doctor</option>
+        {doctors.map((doc) => (
+          <option key={doc.id} value={doc.id}>
+            {doc.name} ({doc.specialization})
+          </option>
+        ))}
+      </select>
+
+      <input
+        type="date"
+        className="border p-2 w-full mb-4"
+        onChange={(e) => setDate(e.target.value)}
+      />
+
+      <button
+        onClick={handleBook}
+        className="bg-green-600 text-white w-full py-2 rounded"
+      >
         Book Appointment
-      </h2>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Doctor ID</label>
-          <input
-            type="text"
-            value={doctorId}
-            onChange={(e) => setDoctorId(e.target.value)}
-            required
-            className="w-full px-3 py-2 border rounded-md"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Doctor Name</label>
-          <input
-            type="text"
-            value={doctorName}
-            onChange={(e) => setDoctorName(e.target.value)}
-            required
-            className="w-full px-3 py-2 border rounded-md"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Date</label>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            className="w-full px-3 py-2 border rounded-md"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-        >
-          {loading ? "Booking..." : "Book Appointment"}
-        </button>
-
-        {message && (
-          <p className={`mt-2 ${message.includes("Error") ? "text-red-600" : "text-green-600"}`}>
-            {message}
-          </p>
-        )}
-      </form>
+      </button>
     </div>
   )
 }

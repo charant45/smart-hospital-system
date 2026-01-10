@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react"
 import { listenToQueue, callNextPatient } from "../../firebase/appointmentService"
+import { useAuth } from "../../context/AuthContext"
 
 function DoctorQueue() {
+  const { user } = useAuth()
   const [queue, setQueue] = useState([])
 
-  const doctorId = "doc_001"
+  const doctorId = user.uid
   const date = new Date().toISOString().slice(0, 10)
 
   useEffect(() => {
+    if (!doctorId) return
     const unsubscribe = listenToQueue(doctorId, date, setQueue)
     return () => unsubscribe()
-  }, [])
+  }, [doctorId, date])
 
   const handleCallNext = async () => {
     await callNextPatient(doctorId, date)
@@ -29,27 +32,11 @@ function DoctorQueue() {
         Call Next Patient
       </button>
 
-      {queue.length === 0 ? (
-        <p>No patients waiting</p>
-      ) : (
-        <ul className="space-y-2">
-          {queue.map((item) => (
-            <li
-              key={item.id}
-              className={`border p-2 rounded flex justify-between ${
-                item.status === "in-progress"
-                  ? "bg-yellow-100"
-                  : ""
-              }`}
-            >
-              <span>{item.patientEmail}</span>
-              <span className="font-bold">
-                #{item.queueNumber} ({item.status})
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      {queue.map((item) => (
+        <div key={item.id} className="border p-2 mb-2 rounded">
+          {item.patientEmail} – #{item.queueNumber} ({item.status})
+        </div>
+      ))}
     </div>
   )
 }
