@@ -1,11 +1,13 @@
+import DashboardLayout from "../../layouts/DashboardLayout"
+
 function AdminDashboard() {
   return (
-    <div className="p-6">
+    <DashboardLayout>
       <h1 className="text-2xl font-bold text-purple-600">
         Admin Dashboard
       </h1>
-      <p className="mt-2">Manage doctors, slots, billing, analytics.</p>
-    </div>
+      <p>Manage doctors, slots, analytics.</p>
+    </DashboardLayout>
   )
 }
 
