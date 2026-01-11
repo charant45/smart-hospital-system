@@ -3,7 +3,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth"
-import { signOut } from "firebase/auth"
+
 import { auth } from "./auth"
 
 // Register
