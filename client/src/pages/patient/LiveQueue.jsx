@@ -1,40 +1,98 @@
 import { useEffect, useState } from "react"
 import { listenToQueue } from "../../firebase/appointmentService"
+import { useAuth } from "../../context/AuthContext"
 
 function LiveQueue() {
+  const { user } = useAuth()
   const [queue, setQueue] = useState([])
-
-  // Temporary values (later dynamic)
-  const doctorId = "doc_001"
-  const date = new Date().toISOString().slice(0, 10)
+  const [selectedDoctor, setSelectedDoctor] = useState("")
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
 
   useEffect(() => {
-    const unsubscribe = listenToQueue(doctorId, date, setQueue)
+    if (!selectedDoctor || !date) return
+    
+    const unsubscribe = listenToQueue(selectedDoctor, date, setQueue)
     return () => unsubscribe()
-  }, [])
+  }, [selectedDoctor, date])
+
+  // Get doctor ID from user's appointments (simplified - in real app, you'd fetch this)
+  // For now, we'll need to select a doctor or get it from appointments
+  const handleDoctorSelect = (e) => {
+    setSelectedDoctor(e.target.value)
+  }
 
   return (
-    <div className="mt-6">
-      <h2 className="text-lg font-bold mb-3">Live Queue</h2>
+    <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <h2 className="text-3xl font-bold text-gray-800 mb-2">Live Queue</h2>
+          <p className="text-gray-600 mb-6">View real-time queue status for your appointments</p>
 
-      {queue.length === 0 ? (
-        <p>No patients in queue</p>
-      ) : (
-        <ul className="space-y-2">
-          {queue.map((item) => (
-            <li
-              key={item.id}
-              className="border p-2 rounded flex justify-between"
-            >
-              <span>{item.patientEmail}</span>
-              <span className="font-bold">
-                Queue #{item.queueNumber}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+          <div className="mb-6 space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Doctor ID
+              </label>
+              <input
+                type="text"
+                value={selectedDoctor}
+                onChange={handleDoctorSelect}
+                placeholder="Enter doctor ID"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Date
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+              />
+            </div>
+          </div>
+
+          {queue.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-lg">
+              <p className="text-gray-500 text-lg">No patients in queue</p>
+              <p className="text-gray-400 text-sm mt-2">Select a doctor and date to view the queue</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {queue.map((item, index) => (
+                <div
+                  key={item.id}
+                  className={`border rounded-lg p-4 flex items-center justify-between transition-all ${
+                    index === 0
+                      ? "bg-green-50 border-green-200 shadow-md"
+                      : "bg-white border-gray-200 hover:shadow-md"
+                  }`}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                      index === 0
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}>
+                      {item.queueNumber}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800">{item.patientEmail}</p>
+                      <p className="text-sm text-gray-500">Status: {item.status}</p>
+                    </div>
+                  </div>
+                  {index === 0 && (
+                    <span className="px-3 py-1 bg-green-600 text-white text-sm font-semibold rounded-full">
+                      Next
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
   )
 }
 

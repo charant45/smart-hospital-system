@@ -11,14 +11,18 @@ import AdminDashboard from "../pages/dashboards/AdminDashboard"
 
 // Features
 import DoctorQueue from "../pages/doctor/DoctorQueue"
+import DischargeSummary from "../pages/doctor/DischargeSummary"
 import LiveQueue from "../pages/patient/LiveQueue"
 import MyAppointments from "../pages/patient/MyAppointments"
+import Reports from "../pages/patient/Reports"
 import Notifications from "../components/Notifications" 
-import BookAppointment from "../pages/patient/BookAppointment" 
+import BookAppointment from "../pages/patient/BookAppointment"
+import GenerateBill from "../pages/admin/GenerateBill" 
 
 // Guards
 import ProtectedRoute from "./ProtectedRoute"
 import RoleRoute from "./RoleRoute"
+import DashboardLayout from "../layouts/DashboardLayout"
 
 function AppRoutes() {
   return (
@@ -44,7 +48,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={["patient"]}>
-              <BookAppointment />
+              <DashboardLayout>
+                <BookAppointment />
+              </DashboardLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
@@ -55,7 +61,9 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={["patient"]}>
-              <LiveQueue />
+              <DashboardLayout>
+                <LiveQueue />
+              </DashboardLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
@@ -66,7 +74,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={["patient"]}>
-              <MyAppointments />
+              <DashboardLayout>
+                <MyAppointments />
+              </DashboardLayout>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/patient/reports"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["patient"]}>
+              <DashboardLayout>
+                <Reports />
+              </DashboardLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
@@ -89,7 +112,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <RoleRoute allowedRoles={["doctor"]}>
-              <DoctorQueue />
+              <DashboardLayout>
+                <DoctorQueue />
+              </DashboardLayout>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/doctor/discharge-summary"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["doctor"]}>
+              <DashboardLayout>
+                <DischargeSummary />
+              </DashboardLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
@@ -102,6 +140,19 @@ function AppRoutes() {
           <ProtectedRoute>
             <RoleRoute allowedRoles={["admin"]}>
               <AdminDashboard />
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/generate-bill"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["admin"]}>
+              <DashboardLayout>
+                <GenerateBill />
+              </DashboardLayout>
             </RoleRoute>
           </ProtectedRoute>
         }
