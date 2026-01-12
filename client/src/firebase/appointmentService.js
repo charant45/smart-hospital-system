@@ -68,6 +68,42 @@ export const bookAppointment = async ({
   }
 }
 
+// Get a patient's appointments for a given date (optional doctorName filter, case-insensitive)
+export const getPatientAppointmentsByDoctorAndDate = async (
+  patientId,
+  date,
+  doctorName
+) => {
+  try {
+    if (!patientId || !date) {
+      throw new Error("Missing patientId or date")
+    }
+
+    const q = query(
+      collection(db, "appointments"),
+      where("patientId", "==", patientId),
+      where("date", "==", date)
+    )
+
+    const snapshot = await getDocs(q)
+    const lowerDoctor = doctorName ? doctorName.trim().toLowerCase() : ""
+
+    const results = snapshot.docs
+      .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+      .filter((appt) =>
+        lowerDoctor
+          ? (appt.doctorName || "").toLowerCase().includes(lowerDoctor)
+          : true
+      )
+      .sort((a, b) => (a.queueNumber || 0) - (b.queueNumber || 0))
+
+    return results
+  } catch (error) {
+    console.error("Error fetching patient appointments:", error)
+    throw error
+  }
+}
+
 // Realtime queue listener
 export const listenToQueue = (doctorId, date, callback) => {
   const q = query(
@@ -75,6 +111,30 @@ export const listenToQueue = (doctorId, date, callback) => {
     where("doctorId", "==", doctorId),
     where("date", "==", date),
     where("status", "==", "waiting"),
+    orderBy("queueNumber")
+  )
+
+  return onSnapshot(q, (snapshot) => {
+    const queue = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+    callback(queue)
+  })
+}
+
+// Listen to a specific patient's queue with doctor and date filters
+export const listenToPatientQueue = (
+  patientId,
+  doctorName,
+  date,
+  callback
+) => {
+  const q = query(
+    collection(db, "appointments"),
+    where("patientId", "==", patientId),
+    where("doctorName", "==", doctorName),
+    where("date", "==", date),
     orderBy("queueNumber")
   )
 
