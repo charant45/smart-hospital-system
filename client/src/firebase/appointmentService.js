@@ -36,18 +36,36 @@ export const bookAppointment = async ({
   doctorName,
   date,
 }) => {
-  const queueNumber = await getNextQueueNumber(doctorId, date)
+  try {
+    // Validate required fields
+    if (!patientId || !patientEmail || !doctorId || !doctorName || !date) {
+      throw new Error("Missing required fields for appointment booking")
+    }
 
-  return addDoc(collection(db, "appointments"), {
-    patientId,
-    patientEmail,
-    doctorId,
-    doctorName,
-    date,
-    queueNumber,
-    status: "waiting",
-    createdAt: serverTimestamp(),
-  })
+    console.log("Getting queue number for doctor:", doctorId, "date:", date)
+    const queueNumber = await getNextQueueNumber(doctorId, date)
+    console.log("Queue number:", queueNumber)
+
+    const appointmentData = {
+      patientId,
+      patientEmail,
+      doctorId,
+      doctorName,
+      date,
+      queueNumber,
+      status: "waiting",
+      createdAt: serverTimestamp(),
+    }
+
+    console.log("Creating appointment with data:", appointmentData)
+    const docRef = await addDoc(collection(db, "appointments"), appointmentData)
+    console.log("Appointment created with ID:", docRef.id)
+    
+    return docRef
+  } catch (error) {
+    console.error("Error in bookAppointment:", error)
+    throw error
+  }
 }
 
 // Realtime queue listener
@@ -71,7 +89,7 @@ export const listenToQueue = (doctorId, date, callback) => {
 
 // Call next patient
 export const callNextPatient = async (doctorId, date) => {
-  // 1️⃣ Complete current in-progress
+  // 1️ Complete current in-progress
   const inProgressQuery = query(
     collection(db, "appointments"),
     where("doctorId", "==", doctorId),
@@ -86,7 +104,7 @@ export const callNextPatient = async (doctorId, date) => {
     })
   })
 
-  // 2️⃣ Move next waiting → in-progress
+  // 2️ Move next waiting → in-progress
   const waitingQuery = query(
     collection(db, "appointments"),
     where("doctorId", "==", doctorId),
@@ -104,7 +122,7 @@ export const callNextPatient = async (doctorId, date) => {
       status: "in-progress",
     })
 
-    // 🔔 Notify patient
+    //  Notify patient
     await createNotification({
       userId: nextPatient.data().patientId,
       appointmentId: nextPatient.id,
