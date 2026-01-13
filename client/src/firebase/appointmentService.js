@@ -7,6 +7,7 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
   serverTimestamp,
   orderBy,
   limit,
@@ -124,27 +125,57 @@ export const listenToQueue = (doctorId, date, callback) => {
 }
 
 // Listen to a specific patient's queue with doctor and date filters
+// Note: doctorName matching is case-insensitive and partial match
 export const listenToPatientQueue = (
   patientId,
   doctorName,
   date,
   callback
 ) => {
-  const q = query(
-    collection(db, "appointments"),
-    where("patientId", "==", patientId),
-    where("doctorName", "==", doctorName),
-    where("date", "==", date),
-    orderBy("queueNumber")
-  )
+  if (!patientId || !date) {
+    console.warn("listenToPatientQueue: Missing patientId or date")
+    callback([])
+    return () => {}
+  }
 
-  return onSnapshot(q, (snapshot) => {
-    const queue = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }))
-    callback(queue)
-  })
+  try {
+    // Fetch all appointments for patient on this date
+    const q = query(
+      collection(db, "appointments"),
+      where("patientId", "==", patientId),
+      where("date", "==", date)
+    )
+
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const lowerDoctorName = doctorName ? doctorName.trim().toLowerCase() : ""
+        
+        // Filter by doctor name (case-insensitive partial match) and sort by queue number
+        const queue = snapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .filter((appt) => {
+            if (!lowerDoctorName) return true
+            const apptDoctorName = (appt.doctorName || "").toLowerCase()
+            return apptDoctorName.includes(lowerDoctorName) || lowerDoctorName.includes(apptDoctorName)
+          })
+          .sort((a, b) => (a.queueNumber || 0) - (b.queueNumber || 0))
+        
+        callback(queue)
+      },
+      (error) => {
+        console.error("Error in listenToPatientQueue:", error)
+        callback([])
+      }
+    )
+  } catch (error) {
+    console.error("Error setting up patient queue listener:", error)
+    callback([])
+    return () => {}
+  }
 }
 
 // Call next patient
@@ -193,9 +224,44 @@ export const callNextPatient = async (doctorId, date) => {
 
 // Cancel appointment
 export const cancelAppointment = async (appointmentId) => {
-  await updateDoc(doc(db, "appointments", appointmentId), {
-    status: "cancelled",
-  })
+  if (!appointmentId) {
+    throw new Error("Appointment ID is required")
+  }
+
+  try {
+    const appointmentRef = doc(db, "appointments", appointmentId)
+    
+    // Check if appointment exists and can be cancelled
+    const appointmentDoc = await getDoc(appointmentRef)
+    
+    if (!appointmentDoc.exists()) {
+      throw new Error("Appointment not found")
+    }
+
+    const appointmentData = appointmentDoc.data()
+    
+    // Only allow cancelling if status is waiting
+    if (appointmentData.status !== "waiting") {
+      throw new Error(`Cannot cancel appointment with status: ${appointmentData.status}. Only waiting appointments can be cancelled.`)
+    }
+
+    await updateDoc(appointmentRef, {
+      status: "cancelled",
+      cancelledAt: serverTimestamp(),
+    })
+
+    // Create notification for cancellation
+    if (appointmentData.patientId) {
+      await createNotification({
+        userId: appointmentData.patientId,
+        appointmentId: appointmentId,
+        message: `Your appointment with ${appointmentData.doctorName} on ${appointmentData.date} has been cancelled.`,
+      })
+    }
+  } catch (error) {
+    console.error("Error cancelling appointment:", error)
+    throw error
+  }
 }
 
 // Reschedule appointment (change date)
@@ -225,4 +291,45 @@ export const listenToPatientAppointments = (patientId, callback) => {
     }))
     callback(appointments)
   })
+}
+
+// Listen to a doctor's appointments for a specific date (all statuses)
+export const listenToDoctorAppointments = (doctorId, date, callback) => {
+  if (!doctorId || !date) {
+    console.warn("listenToDoctorAppointments: Missing doctorId or date")
+    callback([])
+    return () => {}
+  }
+
+  try {
+    const q = query(
+      collection(db, "appointments"),
+      where("doctorId", "==", doctorId),
+      where("date", "==", date),
+      orderBy("queueNumber")
+    )
+
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const appointments = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        callback(appointments)
+      },
+      (error) => {
+        console.error("Error in listenToDoctorAppointments:", error)
+        // If it's an index error, still return empty array but log it
+        if (error.code === "failed-precondition") {
+          console.error("Firestore index required for appointments query")
+        }
+        callback([])
+      }
+    )
+  } catch (error) {
+    console.error("Error setting up doctor appointments listener:", error)
+    callback([])
+    return () => {}
+  }
 }

@@ -112,16 +112,20 @@ function BookAppointment() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">Book Appointment</h2>
-        <p className="text-gray-600 mb-6">Select a doctor and choose your preferred date</p>
+      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
+            Book Appointment
+          </h2>
+          <p className="text-gray-600">Select a doctor and choose your preferred date</p>
+        </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
-            <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-xl flex items-center space-x-3 shadow-sm">
+            <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm font-medium text-red-700">{error}</p>
           </div>
         )}
 
@@ -146,35 +150,39 @@ function BookAppointment() {
         )}
 
         {success && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
-            <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-xl flex items-center space-x-3 shadow-sm">
+            <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            <p className="text-sm text-green-600">{success}</p>
+            <p className="text-sm font-medium text-green-700">{success}</p>
           </div>
         )}
 
         <form onSubmit={handleBook} className="space-y-6">
           {/* Doctor Selection */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-bold text-gray-700 mb-3">
               Select Doctor <span className="text-red-500">*</span>
             </label>
             
             {loadingDoctors ? (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-                <p className="mt-2 text-gray-500">Loading doctors...</p>
+              <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-200">
+                <div className="inline-block animate-spin rounded-full h-10 w-10 border-4 border-green-200 border-t-green-600 mb-3"></div>
+                <p className="mt-2 text-gray-600 font-medium">Loading doctors...</p>
               </div>
             ) : loadError === "no-doctors" || (doctors.length === 0 && !loadError) ? (
-              <div className="text-center py-8 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="text-4xl mb-3">👨‍⚕️</div>
-                <p className="text-yellow-800 font-semibold">No doctors available at the moment.</p>
-                <p className="text-sm text-yellow-600 mt-2">Doctors need to register first before they appear here.</p>
-                <p className="text-sm text-yellow-600 mt-1">Please check back later or contact admin.</p>
+              <div className="text-center py-12 bg-gradient-to-br from-yellow-50 to-amber-50 border-2 border-dashed border-yellow-300 rounded-xl">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <p className="text-yellow-800 font-bold text-lg mb-2">No doctors available at the moment.</p>
+                <p className="text-sm text-yellow-700 mb-1">Doctors need to register first before they appear here.</p>
+                <p className="text-sm text-yellow-700 mb-4">Please check back later or contact admin.</p>
                 <button
                   onClick={fetchDoctors}
-                  className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm"
+                  className="px-5 py-2.5 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-lg hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 text-sm font-semibold shadow-md hover:shadow-lg"
                 >
                   Refresh
                 </button>
@@ -184,7 +192,7 @@ function BookAppointment() {
                 value={selectedDoctor}
                 onChange={(e) => setSelectedDoctor(e.target.value)}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition bg-white text-gray-800"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all bg-white text-gray-800 font-medium shadow-sm hover:border-gray-300"
               >
                 <option value="">Choose a doctor...</option>
                 {doctors.map((doctor) => (
@@ -207,7 +215,7 @@ function BookAppointment() {
               onChange={(e) => setDate(e.target.value)}
               min={new Date().toISOString().split('T')[0]}
               required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all bg-white text-gray-800 font-medium shadow-sm hover:border-gray-300"
             />
           </div>
 
