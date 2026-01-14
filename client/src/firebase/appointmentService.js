@@ -250,13 +250,18 @@ export const cancelAppointment = async (appointmentId) => {
       cancelledAt: serverTimestamp(),
     })
 
-    // Create notification for cancellation
+    // Create notification for cancellation (non-blocking - don't fail if notification creation fails)
     if (appointmentData.patientId) {
-      await createNotification({
-        userId: appointmentData.patientId,
-        appointmentId: appointmentId,
-        message: `Your appointment with ${appointmentData.doctorName} on ${appointmentData.date} has been cancelled.`,
-      })
+      try {
+        await createNotification({
+          userId: appointmentData.patientId,
+          appointmentId: appointmentId,
+          message: `Your appointment with ${appointmentData.doctorName} on ${appointmentData.date} has been cancelled.`,
+        })
+      } catch (notificationError) {
+        // Log but don't throw - cancellation succeeded, notification is optional
+        console.warn("Failed to create cancellation notification:", notificationError)
+      }
     }
   } catch (error) {
     console.error("Error cancelling appointment:", error)
@@ -266,10 +271,48 @@ export const cancelAppointment = async (appointmentId) => {
 
 // Reschedule appointment (change date)
 export const rescheduleAppointment = async (appointmentId, newDate) => {
-  await updateDoc(doc(db, "appointments", appointmentId), {
-    date: newDate,
-    status: "waiting",
-  })
+  if (!appointmentId || !newDate) {
+    throw new Error("Appointment ID and new date are required")
+  }
+
+  try {
+    const appointmentRef = doc(db, "appointments", appointmentId)
+    
+    // Check if appointment exists
+    const appointmentDoc = await getDoc(appointmentRef)
+    
+    if (!appointmentDoc.exists()) {
+      throw new Error("Appointment not found")
+    }
+
+    const appointmentData = appointmentDoc.data()
+    
+    // Only allow rescheduling if status is waiting
+    if (appointmentData.status !== "waiting") {
+      throw new Error(`Cannot reschedule appointment with status: ${appointmentData.status}. Only waiting appointments can be rescheduled.`)
+    }
+
+    await updateDoc(appointmentRef, {
+      date: newDate,
+      status: "waiting",
+    })
+
+    // Create notification for rescheduling (non-blocking)
+    if (appointmentData.patientId) {
+      try {
+        await createNotification({
+          userId: appointmentData.patientId,
+          appointmentId: appointmentId,
+          message: `Your appointment with ${appointmentData.doctorName} has been rescheduled to ${newDate}.`,
+        })
+      } catch (notificationError) {
+        console.warn("Failed to create reschedule notification:", notificationError)
+      }
+    }
+  } catch (error) {
+    console.error("Error rescheduling appointment:", error)
+    throw error
+  }
 }
 
 // Permanently delete an appointment
