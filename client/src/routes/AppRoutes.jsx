@@ -15,6 +15,7 @@ import DischargeSummary from "../pages/doctor/DischargeSummary"
 import LiveQueue from "../pages/patient/LiveQueue"
 import MyAppointments from "../pages/patient/MyAppointments"
 import Reports from "../pages/patient/Reports"
+import MedicalHistory from "../pages/patient/MedicalHistory"
 import Notifications from "../components/Notifications" 
 import BookAppointment from "../pages/patient/BookAppointment"
 import GenerateBill from "../pages/admin/GenerateBill" 
@@ -89,6 +90,19 @@ function AppRoutes() {
             <RoleRoute allowedRoles={["patient"]}>
               <DashboardLayout>
                 <Reports />
+              </DashboardLayout>
+            </RoleRoute>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/patient/medical-history"
+        element={
+          <ProtectedRoute>
+            <RoleRoute allowedRoles={["patient"]}>
+              <DashboardLayout>
+                <MedicalHistory />
               </DashboardLayout>
             </RoleRoute>
           </ProtectedRoute>

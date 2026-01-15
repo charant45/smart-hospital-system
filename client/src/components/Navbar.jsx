@@ -99,6 +99,16 @@ function Navbar() {
                 >
                   Reports
                 </Link>
+                <Link
+                  to="/patient/medical-history"
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive("/patient/medical-history")
+                      ? `bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md`
+                      : "text-gray-600 hover:bg-green-50 hover:text-green-600"
+                  }`}
+                >
+                  Medical History
+                </Link>
               </>
             )}
 
